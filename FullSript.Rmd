@@ -8,26 +8,7 @@ toc: true
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-```
 
-
-# Prerequisite 
-
-This workshop is suitable for those beginer to intermediate in R. It requires you know how to set your working directory, how to read data into R.
-
-- Section on how to download the crime data 
-- Section on how to download shapefile 
-- Download population stats - maybe for rates? 
-
-
-Using open source police recorded crime statistics this workshop will demonstrate how to map crime data in R using sf and ggplot
-
-
-
-# Topic 1 - Intro to spatial data / point data
-
-
-```{r load packages }
 # for data reading/manipulation 
 library(dplyr)
 library(tidyr)
@@ -42,9 +23,27 @@ library(spdep)
 library(leaflet) 
 library(RColorBrewer)
 library(tmap)
+
 ```
 
 
+# Prerequisite 
+
+This workshop is suitable for those beginner to intermediate in R. It requires you know how to set your working directory, how to read data into R.
+
+Using open source police recorded crime statistics from 2019 this workshop will demonstrate how to map crime data in R using sf and ggplot. More specifically looking at the area of Surrey we will 
+
+  1) briefly explore the crime data and introduce key topics in spatial data
+  2) demonstrate how to use shapefiles to map data 
+  3) calculate and map crime rate 
+
+
+The datasets needed in this workshop include crime data, population statistics and shapefiles. Information on how to download these will be available in R file names 'downloading the data' but feel free to obtain these via git *add link*. Ensure these are loaded into your environment before starting the workshop
+
+
+
+
+# Topic 1 - Intro to spatial data 
 
 ## Downloading the crime data 
 
@@ -69,44 +68,54 @@ Points, lines and polygon
 
 - Our coordinate variables (the latitude and longitude) are known as point data 
 - The 'location' variable represents the line. This is normally define by a street or junction 
-- The 'lsoa name' represent our polygon (bourough, wards, districts etc). LSOA refers to the Lower Layer Super Output Areas which are a unit measure in census geogrpahy 
+- The 'lsoa name' represent our polygon (borough, wards, districts etc). LSOA refers to the Lower Layer Super Output Areas which are a unit measure in census geography 
 
 
 
 
+## Simple Features and Projection methods
 
-## Simple Features
-
-Simple Features is a common R language, known as sf packages, that allow you to handle and manipualte the UoA (points, lines and polyons). It allows you store spatial objects and such
+Simple Features is a common R language, known as sf packages, that allow you to handle and manipulate the UoA (points, lines and polyons). Simple Features allows you store spatial objects
 
 Features refers to the property that linestring and polygons are built from points by straight line segments
 
-- sf vs sp 
+- simple features or spatial polygons (sf vs sp) 
+
+crs: 
+
+CRS are  is a coordinate-based local, regional or global system used to locate geographical entities. A spatial reference system defines a specific map projection, as well as transformations between different spatial reference systems. […] spatial reference systems can be referred to using a SRID integer, including EPSG codes
+
+In short "Projection methods allow us to move move from the 3D to the 2D, CRS allow us to identify specific locations within these 
+
+There are thousands of CRS, the most common being BNG and the WGS 84 
+
+Each crs has an ESPG identifier
+i.e. the BNG = 27700
+i.e. the WGS 84 is 4326 
 
 
-First step is to transform you ordinary data into an sf object using st_as_sf compromising of three components
-- data, coords, and crs 
+First step is to transform you ordinary data into an sf object using 'st_as_sf' 
+
 
 ```{r simple features }
-#Including NAs
+st_crs(crime01_19)   # to check the crs
+
 sf <- st_as_sf(crime01_19,                                
                       coords = c("longitude", "latitude"),
-                      crs = 4326,
-                      na.fail = FALSE)   
-class(sf)
-
-
-# Removing NAs
-sum(is.na(crime01_19$latitude))
-
-crime01_19_na <- crime01_19 %>%
-   drop_na(latitude)
-
-sf2 <- st_as_sf(crime01_19_na,                                
-                      coords = c("longitude", "latitude"),
-                      crs = 4326)   
+                      crs = 4326, 
+                      na.fail = FALSE)
 
 ```
+
+
+
+
+Other functions 
+- agr (atribute-geometry-relationship) = character vector. 
+- Specifies for each non-geometry attribute column how it relates to the geometry, and can have one of following values: "constant", "aggregate", "identity". "constant" is used for attributes that are constant throughout the geometry (e.g. land use), "aggregate" where the attribute is an aggregate value over the geometry (e.g. population density or population count), "identity" when the attributes uniquely identifies the geometry of particular "thing", such as a building ID or a city name. The default value, NA_agr_, implies we don't know.
+
+
+
 
 
 
@@ -121,19 +130,46 @@ ggplot(sf, aes(x = crime_type)) +
 
 #### Plot the point data
 ggplot() + 
+  geom_sf(data = sf)
+
+
+#### Reference map 
+ggplot() + 
   annotation_map_tile() +
   geom_sf(data = sf)
 
 
-#### Subsetting for just ASB 
-asb <- subset(sf, crime_type == "Anti-social behaviour")
+#### Sub-setting for just ASB 
+asb <- subset(sf, crime_type == "Anti-social behaviour") %>% 
+  select(-c(1, 9, 10))
+
 ggplot() +
   annotation_map_tile() +
-  geom_sf(data = sf2) 
+  geom_sf(data = asb)
+```
 
 
+### Activity 1
+
+```{r}
+#### Activity 1 - How does this compare to 'drugs'?
+#Subset the data for the those crime types recorded as 'drugs', create this into a new object like we did for ASB and name it 'drugs' 
+#Using ggplot plot the point data over a base map (reference map)
+
+
+#Solution 
+
+drugs <- subset(sf, crime_type == "Drugs") %>%  
+  select(-c(1, 9, 10))
+
+ggplot() +
+  annotation_map_tile() +
+  geom_sf(data = drugs) 
 
 ```
+
+
+
 
 
 
@@ -156,20 +192,9 @@ They contain four mandatory file extensions (.shx, .shp, .dbf and the .prj).
 - The .prj contains the cs and projection information
 
 
-- Mention crime data and criminology using LSOA as the main census geogrpahy 
+- Mention crime data and how research in criminology tend to use the LSOA as the main census geography 
 
 
-To optain boundary data we will use the  https://borders.ukdataservice.ac.uk/bds.html 
-
-
-Steps to download: 
-
-Select; England, Statistical Building Block, 2011 and later
-Click 'Find' 
-Select 'English Lower Layer Super Output Areas' 
-Click 'List Areas' 
-Select 'Surrey Health' 
-Click 'Extract Boundary Data' 
 
 
 Read in the Shapefile for 'Surrey Heath' 
@@ -178,26 +203,39 @@ Read in the Shapefile for 'Surrey Heath'
  
 shp_file <- st_read("Data/Shapefile/england_lsoa_2011.shp")
 
+
+## Plot the Shapefile 
 ggplot() + 
   geom_sf(data = shp_file)
 
 ```
 
 
-Count the crimes per lsoa 
+
+The original crime01_19 data set contains the individual count of reported crime types across LSOAS, therefore the LSOAs are repeated multiple times. This is because you would expect to see multiple crime counts in one LSOA
+
+In order to highlight how many crimes have occurred in each LSOA, you need to count the crimes per LSOA and we can use this code to do so 
+
 
 ```{r crimes per lsoa}
-crimes_per_lsoa <- crime01_19 %>%
+crimes_grouped_by_lsoa <- crime01_19 %>%
   group_by(lsoa_code) %>%
   summarise(count=n())
 ```
 
 
-Join the crimes per lsoa to the shapefile 
+In our new object you will see two variables, the LSOA and the count of crime in each one.  
+
+We can now join the shapefile (the geospatial vector) and the crimes_grouped_by_losa (the aggregated data)
+
+To join the crimes per lsoa to the shapefile we can use the left_join function that returns all the rows of the table on the left side of the join and matching rows for the table on the right side of join.
+
+
 
 ```{r merge the data}
 
-surrey_lsoa <- left_join(shp_file, crimes_per_lsoa, by = c("code" = "lsoa_code"))
+surrey_lsoa <- left_join(shp_file, crimes_grouped_by_lsoa, by = c("code" = "lsoa_code"))
+
 
 #map the data
 ggplot() + 
@@ -211,13 +249,15 @@ ggplot() +
 
 
 
+
 ## Plotting via the 'tmap' package
 
 
 ```{r}
+library(tmap)
 tm_shape(surrey_lsoa) + 
   tm_fill("count") + 
-  tm_borders(alpha = 0.3)
+  tm_borders(alpha = 0.5)
 ```
 
 
@@ -232,12 +272,27 @@ In this example I've used 'kmeans'. k-means clustering is a method of vector qua
 tm_shape(surrey_lsoa) + 
   tm_fill("count", style = "kmeans") + 
   tm_borders(alpha = 0.3)
+
+tm_shape(surrey_lsoa) + 
+  tm_fill("count", style = "jenks") + 
+  tm_borders(alpha = 0.3)
+
+tm_shape(surrey_lsoa) + 
+  tm_fill("count", style = "sd") + 
+  tm_borders(alpha = 0.3)
+
 ```
 
 
 
 
-## Topic 3: Plotting Distribution / Dasymetric Mapping 
+
+
+
+
+
+
+## Topic 3: Plotting Using the Census
 
 Count data is not entirely accurate of population density 
 
@@ -245,15 +300,12 @@ Count data is not entirely accurate of population density
 For this you can use census data 
 
 ```{r}
-pop <- read_csv("Data/Census Population/Data_UNIT_URESPOP.csv") %>% slice(3:47) %>% 
+pop <- read_csv("Data/Census Population/Data_UNIT_URESPOP.csv") %>% slice(3:57) %>% 
   select(2,3,6,7) %>%
   janitor::clean_names() %>%
   rename(pop_density = f2383, 
          pop_count = f136983) %>% 
   mutate(pop_count = as.numeric(pop_count))
-
-
-
 ```
 
 
@@ -266,8 +318,11 @@ surrey_lsoa <- left_join(surrey_lsoa, pop, by = c("code"="geo_code"))
 
 ```
 
-Now you will see the census data has merged into the shapefile. 
-A crime rate is calculated by dividing the number of reported by the toal population, and then multiplied by 100,000. 
+
+
+Now you will see the census data has merged into the shapefile, 
+
+A crime rate is calculated by dividing the number of reported by the total population, and then multiplied by 100,000. 
 
 In this case that would be the count variable, divided by the 'pop' variable, and then times by 1000 (we use 1000 as this is the average population of an LSOA, if you were using larger UoA you can choose to multiply by 100,000. Just remember what affect this will have on your rate and how this then interpreted across your results)
 
@@ -308,27 +363,6 @@ tm_shape(surrey_lsoa) +
 
 
 
-###
-
-i.e. solution for mapping population densitiy relative to reisdential land-use
-
-Areal requires your data to be sf objects and and to be re-projected  - are data checks both these boxes
-
-
-```{r}
-install.packages("areal")
-library(areal)
-
-aw_interpolate(ar_stl_wards, tid = WARD, source = ar_stl_race, sid = "GEOID", 
-               weight = "sum", output = "sf", extensive = "TOTAL_E")
-
-```
-
-
-
-
-
-
 
 
 
@@ -345,6 +379,11 @@ m <- leaflet(data = asb) %>%
 m
 
 ```
+
+
+
+
+
 
 
 
