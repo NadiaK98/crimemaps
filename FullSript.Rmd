@@ -43,7 +43,7 @@ The datasets needed in this workshop include crime data, population statistics a
 
 
 
-# Topic 1 - Intro to spatial data 
+# Topic 1: - Intro to spatial data 
 
 ## Downloading the crime data 
 
@@ -177,7 +177,7 @@ ggplot() +
 \newpage 
 
 
-# Topic 2 - Shapefiles 
+# Topic 2: - Shapefiles 
 
 What are Shapefiles? 
 
@@ -292,7 +292,7 @@ tm_shape(surrey_lsoa) +
 
 
 
-## Topic 3: Plotting Using the Census
+# Topic 3: - Crime Rate vs Crime Count 
 
 Count data is not entirely accurate of population density 
 
