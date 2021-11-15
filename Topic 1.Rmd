@@ -1,0 +1,129 @@
+---
+title: "Topic 1: Crime data "
+output: html_notebook
+---
+
+
+
+## Downloading the crime data 
+
+ *https://data.police.uk/*. 
+
+Select January 2019 to December 2019, from the Surrey and click 'Include Crime Data'. Download and unzip the data into your working directory
+
+Read in just the January 2019 month of data
+
+
+```{r crime data}
+#unzip(file.choose())
+crime01_19 <- read_csv("Data/2020-08/2020-08-surrey-street.csv") %>% 
+  janitor::clean_names() 
+
+#explore variables
+glimpse(crime01_19)
+
+```
+
+
+
+## briefly explore using ggmap and ggplot
+
+
+```{r using ggmap}
+Crawley <- c(long = -0.152210, lat = 51.15813)
+map <- get_map(Crawley, zoom = 13, scale = 1)
+ggmap(map)
+
+
+
+
+ggplot() +
+  geom_point(aes(longitude, latitude), data = crime01_19)
+
+```
+
+
+
+
+
+## Simple Features and Projection methods
+
+
+```{r simple features }
+st_crs(crime01_19)   # to check the crs
+
+sf <- st_as_sf(crime01_19,                                
+                      coords = c("longitude", "latitude"),
+                      crs = 4326, 
+                      na.fail = FALSE)
+st_crs(sf)
+
+```
+
+
+
+
+
+## Mapping point data 
+
+
+```{r}
+#### Briefly explore the trend
+ggplot(sf, aes(x = crime_type)) + 
+  geom_bar()
+
+
+#### Plot the point data
+ggplot() + 
+  geom_sf(data = sf)
+
+
+#### Colour the different crime type
+ggplot() + 
+  geom_sf(data = sf, aes(fill = crime_type, col = crime_type))
+
+
+#### Reference map 
+ggplot() + 
+  annotation_map_tile() +
+  geom_sf(data = sf)
+
+
+#### Sub-setting for just ASB 
+asb <- subset(sf, crime_type == "Anti-social behaviour") %>% 
+  select(-c(1, 9, 10))
+
+ggplot() +
+  annotation_map_tile() +
+  geom_sf(data = asb)
+
+
+
+```
+
+
+
+
+### Activity 1
+
+```{r}
+#### Activity 1 - How does this compare to 'drugs'?
+#Subset the data for the those crime types recorded as 'drugs', create this into a new object like we did for ASB and name it 'drugs' 
+#Using ggplot plot the point data over a base map (reference map)
+
+
+#Solution 
+
+drugs <- subset(sf, crime_type == "Drugs") %>%  
+  select(-c(1, 9, 10))
+
+ggplot() +
+  annotation_map_tile() +
+  geom_sf(data = drugs) 
+
+```
+
+
+
+
+

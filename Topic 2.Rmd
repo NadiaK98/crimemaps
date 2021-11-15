@@ -1,0 +1,104 @@
+---
+title: "Topic 2: Shapefiles"
+output: html_notebook
+---
+
+
+
+Read in the Shapefile for 'Surrey Heath' 
+
+```{r read and plot the boundary for surrey heath}
+ 
+shp_file <- st_read("Data/Shapefile/england_lsoa_2011.shp")
+
+
+## Plot the Shapefile 
+ggplot() + 
+  geom_sf(data = shp_file)
+
+```
+
+
+
+```{r crimes per lsoa}
+crimes_grouped_by_lsoa <- crime01_19 %>%
+  group_by(lsoa_code) %>%
+  summarise(count=n())
+```
+
+
+
+```{r merge the data}
+
+surrey_lsoa <- left_join(shp_file, crimes_grouped_by_lsoa, by = c("code" = "lsoa_code"))
+
+
+#map the data
+ggplot() + 
+  annotation_map_tile() + 
+  geom_sf(data = surrey_lsoa, aes(fill = count), alpha = 0.5) + 
+  scale_fill_gradient2(name ="Number of crimes")
+
+```
+
+
+
+
+
+## Plotting via the 'tmap' package
+
+
+```{r}
+library(tmap)
+tm_shape(surrey_lsoa) + 
+  tm_fill("count") + 
+  tm_borders(alpha = 0.5)
+```
+
+
+
+
+## Can we add a basemap to a tmap function?
+
+```{r}
+library(rosm)
+library(tmaptools)
+
+
+if(Sys.getenv("JAVA_HOME")!=""){
+    Sys.setenv(JAVA_HOME="")
+}
+
+Sys.setenv(JAVA_HOME = "C:/Program Files/Java/jdk1.8.0_101/") 
+
+osm_surrey <- read_osm(surrey_lsoa, ext = 1.1)
+
+```
+
+
+
+
+
+
+
+## Classification methods
+
+
+```{r}
+tm_shape(surrey_lsoa) + 
+  tm_fill("count", style = "kmeans") + 
+  tm_borders(alpha = 0.3)
+
+tm_shape(surrey_lsoa) + 
+  tm_fill("count", style = "jenks") + 
+  tm_borders(alpha = 0.3)
+
+tm_shape(surrey_lsoa) + 
+  tm_fill("count", style = "sd") + 
+  tm_borders(alpha = 0.3)
+
+
+
+```
+
+

@@ -209,7 +209,7 @@ ggplot() +
 
 Binning, can be thought of as a two-dimensional histogram (shading of the bins take the heights of the bars). 
 
-Need to convert the sf data.fram geometry column into a data.frame with separate x, y columns 
+Need to convert the sf data.frame geometry column into a data.frame with separate x, y columns 
 
 How do you separate the coordinates? 
 
@@ -227,7 +227,7 @@ sfc_as_cols <- function(x, names = c("x","y")) {
 }
 
 
-sf_seperate <- sfc_as_cols(sf, c("lng", "lat"))
+sf_seperate <- sfc_as_cols(sf, c("lng", "lat")) 
 
 
 ggplot(sf_seperate, aes(lng, lat)) +   
@@ -256,9 +256,9 @@ ggplot(sf_seperate, aes(lng, lat)) +
 
 What are Shapefiles? 
 
-They represent a geospatial vector that is used for GIS software. Shapefiles store both geogrpahic location and its associated attribute infomraiton 
+They represent a geospatial vector that is used for GIS software. Shapefiles store both geogrpahic location and its associated attribute information 
 
-The shapefile format stores the data as primitive geometric shapes like points, lines, and polygons. These shapes, together with data attributes that are linked to each shape, create the representation of the geographic data.
+The Shapefile format stores the data as primitive geometric shapes like points, lines, and polygons. These shapes, together with data attributes that are linked to each shape, create the representation of the geographic data.
 
 They contain four mandatory file extensions (.shx, .shp, .dbf and the .prj). 
 - The .shp contains the geometry data (a 2D axis ordering of coordinate data)
@@ -339,6 +339,29 @@ tm_shape(surrey_lsoa) +
 ```
 
 
+
+
+## Can we add a basemap to a tmap function?
+
+```{r}
+library(rosm)
+library(tmaptools)
+
+
+if(Sys.getenv("JAVA_HOME")!=""){
+    Sys.setenv(JAVA_HOME="")
+}
+
+Sys.setenv(JAVA_HOME = "C:/Program Files/Java/jdk1.8.0_101/") 
+
+osm_surrey <- read_osm(surrey_lsoa, ext = 1.1)
+
+```
+
+
+
+
+
 How can we better visualise counts? Count data does not equally represent the population distribution at hand, tmaps allows you to add different 'styles' 
 
 The different styles result in different clustering mechanism, tmaps have available on 'jenks'or 'Standard Deviation' 
@@ -358,7 +381,7 @@ tm_shape(surrey_lsoa) +
   tm_borders(alpha = 0.3)
 
 tm_shape(surrey_lsoa) + 
-  tm_fill("count", style = "sd", title = "sd") + 
+  tm_fill("count", style = "sd") + 
   tm_borders(alpha = 0.3)
 
 
@@ -438,7 +461,6 @@ ggplot() +
 
 ##tmaps 
 
-
 ```{r}
 tm_shape(surrey_lsoa) + 
   tm_fill("crime_rate", style = "quantile") + 
@@ -450,7 +472,7 @@ tm_shape(surrey_lsoa) +
 
 ## Cartograms and ggplot
 
-A cartogram is a type of map where different geogrpahic areas are modified based on a variable associated to those areas. 
+A cartogram is a type of map where different geographic areas are modified based on a variable associated to those areas. 
 
 Two types: contiguous vs non-contiguous (sharing a common border) 
 
@@ -501,7 +523,8 @@ Steps:
 - 4) Plot both maps together using tmap_arrange 
 - 5) Plot a cartogram of residential population
 
-Is there a difference between the cime rate when using workday population compared to residential population? Would we expect to see these trends
+Is there a difference between the crime rate when using workday population compared to residential population? Would we expect to see these trends
+
 
 
 
